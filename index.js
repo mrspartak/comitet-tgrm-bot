@@ -1,6 +1,7 @@
 (async () => {
 	require('dotenv').config();
 
+	const parse = require('co-body');
 	const http = require('http');
 	const url = require('url');
 	const querystring = require('querystring');
@@ -9,6 +10,7 @@
 	/* config */
 	const PORT = +process.env.PORT || 3019;
 	const DEBUG = process.env.DEBUG || false;
+	const TOKEN = process.env.TOKEN || false;
 
 	const TJ_KEY = process.env.TJ_KEY || false;
 	const VC_KEY = process.env.VC_KEY || false;
@@ -16,6 +18,7 @@
 
 	console.log('APP_CONFIG', {
 		PORT,
+		TOKEN: !!DEBUG,
 		DEBUG: !!DEBUG,
 		TJ_KEY: !!TJ_KEY,
 		VC_KEY: !!VC_KEY,
@@ -37,13 +40,13 @@
 		/* POST */
 		if (request.method == 'POST') {
 			if (pathname == '/webhook_tj') {
-				serve_webhook('tj', request, query);
+				await serve_webhook('tj', request, query);
 			}
 			if (pathname == '/webhook_dtf') {
-				serve_webhook('dtf', request, query);
+				await serve_webhook('dtf', request, query);
 			}
 			if (pathname == '/webhook_vc') {
-				serve_webhook('vc', request, query);
+				await serve_webhook('vc', request, query);
 			}
 		}
 
@@ -57,7 +60,9 @@
 		console.log(`server is listening on ${PORT}`);
 	});
 
-	function serve_webhook(website, request, query) {
-		console.log('serve_webhook', website, request.body, query);
+	async function serve_webhook(website, request, query) {
+		if (TOKEN && query.token !== TOKEN) return;
+		let body = await parse(request);
+		console.log('serve_webhook', website, body, query);
 	}
 })();

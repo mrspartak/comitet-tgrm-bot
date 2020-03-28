@@ -81,8 +81,8 @@
 		let text = body.data.text;
 
 		let matches = __.findMatches(/t\.me\/([a-z0-9\/]+)/gm, text);
-		if (matches) {
-			if (DEBUG) console.log('serve_webhook_matched', website, body, query);
+		if (matches && matches.length) {
+			if (DEBUG) console.log('serve_webhook_matched', website, text, matches);
 
 			let reply = `Зеркало t.me:`;
 			matches.forEach(match => {
@@ -100,7 +100,7 @@
 
 		if (DEBUG) console.log('sendReply', postID, commentID, text);
 
-		var [err, resp] = await __.to(
+		/*var [err, resp] = await __.to(
 			axios.request({
 				method: 'POST',
 				url: 'https://api.tjournal.ru/v1.8/comment/add',
@@ -117,8 +117,8 @@
 					'User-agent': 'tgrm-bot/v0.0.1',
 				},
 			}),
-		);
-		if (err) console.error('sendReply', err.message);
-		if (DEBUG) console.log(resp ? resp.data : '');
+		);*/
+		if (err) console.error('sendReply.err', err.message);
+		if (DEBUG) console.log('sendReply.success', resp ? resp.data : '');
 	}
 })();

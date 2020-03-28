@@ -105,7 +105,7 @@
 		var [err, resp] = await __.to(
 			axios.request({
 				method: 'POST',
-				baseUrl: url,
+				baseURL: url,
 				url: 'comment/add',
 
 				data: querystring.stringify({
@@ -122,6 +122,6 @@
 			}),
 		);
 		if (err) console.error('sendReply.err', err.message);
-		if (DEBUG) console.log('sendReply.success');
+		else if (DEBUG) console.log('sendReply.success');
 	}
 })();

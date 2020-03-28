@@ -103,7 +103,8 @@
 		/*var [err, resp] = await __.to(
 			axios.request({
 				method: 'POST',
-				url: 'https://api.tjournal.ru/v1.8/comment/add',
+				baseUrl: url,
+				url: 'comment/add',
 
 				data: querystring.stringify({
 					id: postID,
@@ -117,8 +118,9 @@
 					'User-agent': 'tgrm-bot/v0.0.1',
 				},
 			}),
-		);*/
+		);
 		if (err) console.error('sendReply.err', err.message);
 		if (DEBUG) console.log('sendReply.success', resp ? resp.data : '');
+		*/
 	}
 })();

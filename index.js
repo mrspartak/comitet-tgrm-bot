@@ -39,8 +39,8 @@
 	};
 	const TOKENS = {
 		tj: TJ_KEY,
-		dtf: VC_KEY,
-		vc: DTF_KEY,
+		dtf: DTF_KEY,
+		vc: VC_KEY,
 	};
 
 	/* serve requests */

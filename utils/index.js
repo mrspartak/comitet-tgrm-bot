@@ -6,3 +6,9 @@ exports.to = function(promise) {
 		})
 		.catch(err => [err]);
 };
+
+exports.findMatches = function(regex, str, matches = []) {
+	const res = regex.exec(str);
+	res && matches.push(res) && findMatches(regex, str, matches);
+	return matches;
+};

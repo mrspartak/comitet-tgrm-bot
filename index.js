@@ -2,6 +2,8 @@
 	require('dotenv').config();
 
 	const parse = require('co-body');
+	const axios = require('axios');
+
 	const http = require('http');
 	const url = require('url');
 	const querystring = require('querystring');
@@ -18,12 +20,23 @@
 
 	console.log('APP_CONFIG', {
 		PORT,
-		TOKEN: !!DEBUG,
+		TOKEN: !!TOKEN,
 		DEBUG: !!DEBUG,
 		TJ_KEY: !!TJ_KEY,
 		VC_KEY: !!VC_KEY,
 		DTF_KEY: !!DTF_KEY,
 	});
+
+	const ENDPOINTS = {
+		tj: 'https://api.tjournal.ru/v1.8/',
+		dtf: 'https://api.dtf.ru/v1.8/',
+		vc: 'https://api.vc.ru/v1.8/',
+	};
+	const TOKENS = {
+		tj: TJ_KEY,
+		dtf: VC_KEY,
+		vc: DTF_KEY,
+	};
 
 	/* serve requests */
 	const server = http.createServer(async (request, response) => {
@@ -63,6 +76,49 @@
 	async function serve_webhook(website, request, query) {
 		if (TOKEN && query.token !== TOKEN) return;
 		let body = await parse(request);
-		console.log('serve_webhook', website, body, query);
+		if (!body || body.type != 'new_comment') return;
+
+		let text = body.data.text;
+
+		let matches = __.findMatches(/t\.me\/([a-z0-9\/]+)/gm, text);
+		if (matches) {
+			if (DEBUG) console.log('serve_webhook_matched', website, body, query);
+
+			let reply = `Зеркало t.me:`;
+			matches.forEach(match => {
+				reply += `\nhttps://tgrm.cc/${match[1]}`;
+			});
+			sendReply(website, body.data.content.id, body.data.id, reply);
+		}
+	}
+
+	async function sendReply(website, postID, commentID, text) {
+		let url = ENDPOINTS[website];
+		let token = TOKENS[website];
+
+		if (!url || !token) return;
+
+		if (DEBUG) console.log('sendReply', postID, commentID, text);
+
+		var [err, resp] = await __.to(
+			axios.request({
+				method: 'POST',
+				url: 'https://api.tjournal.ru/v1.8/comment/add',
+
+				data: querystring.stringify({
+					id: postID,
+					text,
+					reply_to: commentID,
+				}),
+
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'X-Device-Token': token,
+					'User-agent': 'tgrm-bot/v0.0.1',
+				},
+			}),
+		);
+		if (err) console.error('sendReply', err.message);
+		if (DEBUG) console.log(resp ? resp.data : '');
 	}
 })();

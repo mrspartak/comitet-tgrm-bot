@@ -27,6 +27,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "co-body": "^6.0.0",
+    "dayjs": "^1.8.23",
     "dotenv": "^8.2.0"
   }
 }

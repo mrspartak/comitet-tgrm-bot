@@ -18,7 +18,12 @@
 	const VC_KEY = process.env.VC_KEY || false;
 	const DTF_KEY = process.env.DTF_KEY || false;
 
-	console.log('APP_CONFIG', {
+	const logInstance = require('./utils/log');
+	const log = new logInstance({
+		level: DEBUG ? 'debug' : 'info',
+	});
+
+	log.info('APP_CONFIG', {
 		PORT,
 		TOKEN: !!TOKEN,
 		DEBUG: !!DEBUG,
@@ -69,8 +74,8 @@
 
 	/* start server */
 	server.listen(PORT, err => {
-		if (err) return console.log('something bad happened', err.message);
-		console.log(`server is listening on ${PORT}`);
+		if (err) return log.error('something bad happened', err.message);
+		log.info(`server is listening on ${PORT}`);
 	});
 
 	async function serve_webhook(website, request, query) {
@@ -78,13 +83,13 @@
 		let body = await parse(request);
 		if (!body || body.type != 'new_comment' || !body.data.text) return;
 
-		if (DEBUG) console.log('serve_webhook', 'new_comment');
+		log.debug('serve_webhook', 'new_comment', website);
 
 		let text = body.data.text;
 
 		let matches = __.findMatches(/t\.me\/([a-z0-9\/]+)/gm, text);
 		if (matches && matches.length) {
-			if (DEBUG) console.log('serve_webhook_matched', website, text);
+			log.debug('serve_webhook_matched', website, text);
 
 			let reply = `Зеркало t.me:`;
 			matches.forEach(match => {
@@ -100,7 +105,7 @@
 
 		if (!url || !token) return;
 
-		if (DEBUG) console.log('sendReply', postID, commentID, text);
+		log.debug('sendReply', postID, commentID, text);
 
 		var [err, resp] = await __.to(
 			axios.request({
@@ -121,7 +126,7 @@
 				},
 			}),
 		);
-		if (err) console.error('sendReply.err', err.message);
-		else if (DEBUG) console.log('sendReply.success');
+		if (err) log.error('sendReply.err', err.message);
+		else log.debug('sendReply.success');
 	}
 })();

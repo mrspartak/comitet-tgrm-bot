@@ -76,13 +76,15 @@
 	async function serve_webhook(website, request, query) {
 		if (TOKEN && query.token !== TOKEN) return;
 		let body = await parse(request);
-		if (!body || body.type != 'new_comment') return;
+		if (!body || body.type != 'new_comment' || !body.data.text) return;
+
+		if (DEBUG) console.log('serve_webhook', 'new_comment');
 
 		let text = body.data.text;
 
 		let matches = __.findMatches(/t\.me\/([a-z0-9\/]+)/gm, text);
 		if (matches && matches.length) {
-			if (DEBUG) console.log('serve_webhook_matched', website, text, matches);
+			if (DEBUG) console.log('serve_webhook_matched', website, text);
 
 			let reply = `Зеркало t.me:`;
 			matches.forEach(match => {
@@ -100,7 +102,7 @@
 
 		if (DEBUG) console.log('sendReply', postID, commentID, text);
 
-		/*var [err, resp] = await __.to(
+		var [err, resp] = await __.to(
 			axios.request({
 				method: 'POST',
 				baseUrl: url,
@@ -120,7 +122,6 @@
 			}),
 		);
 		if (err) console.error('sendReply.err', err.message);
-		if (DEBUG) console.log('sendReply.success', resp ? resp.data : '');
-		*/
+		if (DEBUG) console.log('sendReply.success');
 	}
 })();

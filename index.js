@@ -87,7 +87,7 @@
 
 		let text = body.data.text;
 
-		let matches = __.findMatches(/t\.me\/([a-z0-9\/]+)/gm, text);
+		let matches = __.findMatches(/t\.me\/([a-zA-Z0-9\/_]+)/gm, text);
 		if (matches && matches.length) {
 			log.debug('serve_webhook_matched', website, text);
 

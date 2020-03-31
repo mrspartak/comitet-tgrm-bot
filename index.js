@@ -89,7 +89,7 @@
 
 		let matches = __.findMatches(/t\.me\/([a-zA-Z0-9\/_]+)/gm, text);
 		if (matches && matches.length) {
-			log.debug('serve_webhook_matched', website, text);
+			log.info('serve_webhook_matched', website, text);
 
 			let reply = `Зеркало t.me:`;
 			matches.forEach(match => {

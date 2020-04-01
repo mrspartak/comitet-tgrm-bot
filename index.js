@@ -27,6 +27,7 @@
 	log.info('APP_CONFIG', {
 		PORT,
 		TOKEN: !!TOKEN,
+		WEBHOOK_URL: !!WEBHOOK_URL,
 		DEBUG: !!DEBUG,
 		TJ_KEY: !!TJ_KEY,
 		VC_KEY: !!VC_KEY,
@@ -82,11 +83,11 @@
 		response.end('OK');
 	});
 
-	const STATS_INTERVAL = 10;
+	const STATS_INTERVAL = 5;
 	setInterval(() => {
 		console.log(`${STATS_INTERVAL} min stats | TJ ${STATS.tj} | DTF ${STATS.dtf} | VC ${STATS.vc}`);
 
-		Object.keys(STATS, async website => {
+		Object.keys(STATS).forEach(async website => {
 			if (STATS[website] == 0 && !!TOKENS[website] && WEBHOOK_URL) {
 				console.log(`NO COMMENTS in ${STATS_INTERVAL} min`, website);
 

@@ -66,16 +66,26 @@
 		/* POST */
 		if (request.method == 'POST') {
 			if (pathname == '/webhook_tj') {
-				STATS.tj++;
 				await serve_webhook('tj', request, query);
 			}
 			if (pathname == '/webhook_dtf') {
-				STATS.dtf++;
 				await serve_webhook('dtf', request, query);
 			}
 			if (pathname == '/webhook_vc') {
-				STATS.vc++;
 				await serve_webhook('vc', request, query);
+			}
+		}
+
+		if (request.method == 'GET') {
+			if (pathname == '/webhook_subscribe') {
+				if (!TOKEN || query.token == TOKEN) {
+					if (query.website) await webhookSubscribe(query.website);
+				}
+			}
+			if (pathname == '/webhook_unsubscribe') {
+				if (!TOKEN || query.token == TOKEN) {
+					if (query.website) await webhookUnsubscribe(query.website);
+				}
 			}
 		}
 
@@ -83,7 +93,7 @@
 		response.end('OK');
 	});
 
-	const STATS_INTERVAL = 5;
+	const STATS_INTERVAL = 10;
 	setInterval(() => {
 		console.log(`${STATS_INTERVAL} min stats | TJ ${STATS.tj} | DTF ${STATS.dtf} | VC ${STATS.vc}`);
 
@@ -91,26 +101,13 @@
 			if (STATS[website] == 0 && !!TOKENS[website] && WEBHOOK_URL) {
 				console.log(`NO COMMENTS in ${STATS_INTERVAL} min`, website);
 
-				var [err, resp] = await __.to(
-					axios.request({
-						method: 'POST',
-						baseURL: ENDPOINTS[website],
-						url: 'comment/add',
+				await webhookSubscribe(website);
+			}
 
-						data: querystring.stringify({
-							event: 'new_comment',
-							url: `${WEBHOOK_URL}/webhook_${website}?token=${TOKEN}`,
-						}),
+			if (STATS[website] > 0 && !!TOKENS[website] == false) {
+				console.log(`GOT COMMENTS in ${STATS_INTERVAL} min BUT NO TOKEN`, website);
 
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-							'X-Device-Token': TOKENS[website],
-							'User-agent': 'tgrm-bot/v0.0.1',
-						},
-					}),
-				);
-				if (err) log.error('webhook_set.err', err.message);
-				else log.debug('webhook_set.success', website);
+				await webhookUnubscribe(website);
 			}
 
 			STATS[website] = 0;
@@ -124,6 +121,8 @@
 	});
 
 	async function serve_webhook(website, request, query) {
+		STATS[website]++;
+
 		if (TOKEN && query.token !== TOKEN) return;
 		let body = await parse(request);
 		if (!body || body.type != 'new_comment' || !body.data.text) return;
@@ -173,5 +172,49 @@
 		);
 		if (err) log.error('sendReply.err', err.message);
 		else log.debug('sendReply.success');
+	}
+
+	async function webhookSubscribe(website) {
+		var [err, resp] = await __.to(
+			axios.request({
+				method: 'POST',
+				baseURL: ENDPOINTS[website],
+				url: 'webhooks/add',
+
+				data: querystring.stringify({
+					event: 'new_comment',
+					url: `${WEBHOOK_URL}/webhook_${website}?token=${TOKEN}`,
+				}),
+
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'X-Device-Token': TOKENS[website],
+					'User-agent': 'tgrm-bot/v0.0.1',
+				},
+			}),
+		);
+		if (err) log.error('webhookSubscribe.err', err.message);
+		else log.debug('webhookSubscribe.success', website);
+	}
+	async function webhookUnsubscribe(website) {
+		var [err, resp] = await __.to(
+			axios.request({
+				method: 'POST',
+				baseURL: ENDPOINTS[website],
+				url: 'webhooks/del',
+
+				data: querystring.stringify({
+					event: 'new_comment',
+				}),
+
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'X-Device-Token': TOKENS[website],
+					'User-agent': 'tgrm-bot/v0.0.1',
+				},
+			}),
+		);
+		if (err) log.error('webhookUnsubscribe.err', err.message);
+		else log.debug('webhookUnsubscribe.success', website);
 	}
 })();

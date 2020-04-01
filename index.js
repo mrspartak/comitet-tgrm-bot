@@ -107,7 +107,7 @@
 			if (STATS[website] > 0 && !!TOKENS[website] == false) {
 				console.log(`GOT COMMENTS in ${STATS_INTERVAL} min BUT NO TOKEN`, website);
 
-				await webhookUnubscribe(website);
+				await webhookUnsubscribe(website);
 			}
 
 			STATS[website] = 0;

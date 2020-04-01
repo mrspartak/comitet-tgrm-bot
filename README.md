@@ -11,6 +11,8 @@ const PORT = +process.env.PORT || 3019;
 const DEBUG = process.env.DEBUG || false;
 //webhook token
 const TOKEN = process.env.TOKEN || false;
+//webhook url, to automate webhook subscription
+//WEBHOOK_URL = process.env.WEBHOOK_URL || false;
 
 //API keys
 const TJ_KEY = process.env.TJ_KEY || false;

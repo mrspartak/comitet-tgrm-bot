@@ -13,6 +13,7 @@
 	const PORT = +process.env.PORT || 3019;
 	const DEBUG = process.env.DEBUG || false;
 	const TOKEN = process.env.TOKEN || false;
+	const WEBHOOK_URL = process.env.WEBHOOK_URL || false;
 
 	const TJ_KEY = process.env.TJ_KEY || false;
 	const VC_KEY = process.env.VC_KEY || false;
@@ -43,6 +44,12 @@
 		vc: VC_KEY,
 	};
 
+	let STATS = {
+		tj: 0,
+		dtf: 0,
+		vc: 0,
+	};
+
 	/* serve requests */
 	const server = http.createServer(async (request, response) => {
 		let { pathname, query } = url.parse(request.url);
@@ -58,12 +65,15 @@
 		/* POST */
 		if (request.method == 'POST') {
 			if (pathname == '/webhook_tj') {
+				STATS.tj++;
 				await serve_webhook('tj', request, query);
 			}
 			if (pathname == '/webhook_dtf') {
+				STATS.dtf++;
 				await serve_webhook('dtf', request, query);
 			}
 			if (pathname == '/webhook_vc') {
+				STATS.vc++;
 				await serve_webhook('vc', request, query);
 			}
 		}
@@ -71,6 +81,40 @@
 		response.setHeader('status', 200);
 		response.end('OK');
 	});
+
+	const STATS_INTERVAL = 10;
+	setInterval(() => {
+		console.log(`${STATS_INTERVAL} min stats | TJ ${STATS.tj} | DTF ${STATS.dtf} | VC ${STATS.vc}`);
+
+		Object.keys(STATS, async website => {
+			if (STATS[website] == 0 && !!TOKENS[website] && WEBHOOK_URL) {
+				console.log(`NO COMMENTS in ${STATS_INTERVAL} min`, website);
+
+				var [err, resp] = await __.to(
+					axios.request({
+						method: 'POST',
+						baseURL: ENDPOINTS[website],
+						url: 'comment/add',
+
+						data: querystring.stringify({
+							event: 'new_comment',
+							url: `${WEBHOOK_URL}/webhook_${website}?token=${TOKEN}`,
+						}),
+
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+							'X-Device-Token': TOKENS[website],
+							'User-agent': 'tgrm-bot/v0.0.1',
+						},
+					}),
+				);
+				if (err) log.error('webhook_set.err', err.message);
+				else log.debug('webhook_set.success', website);
+			}
+
+			STATS[website] = 0;
+		});
+	}, 1000 * 60 * STATS_INTERVAL);
 
 	/* start server */
 	server.listen(PORT, err => {
